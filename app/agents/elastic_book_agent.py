@@ -1,4 +1,4 @@
-from app.models.llm import model
+from app.config.llm import model
 from app.tools.elastic_book_tool import get_elastic_tools
 from langchain.agents import create_agent
 from app.models.elastic_book_state import ElasticBookState

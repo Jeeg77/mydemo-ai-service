@@ -1,3 +1,4 @@
+from app.config.llm import model
 from langchain.tools import ToolRuntime, tool
 from langchain.messages import HumanMessage, ToolMessage
 from langgraph.types import Command
@@ -5,7 +6,6 @@ from app.agents.mcp_book_agent import mcp_book_agent
 from app.agents.elastic_book_agent import elastic_book_agent
 from app.models.book_search_state import BookSearchState
 from langchain.agents import create_agent
-from app.models.llm import model
 
 @tool
 async def search_external_books(runtime: ToolRuntime) -> str:

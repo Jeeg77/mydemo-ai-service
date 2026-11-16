@@ -1,5 +1,5 @@
+from app.config.llm import model
 from langchain.agents import create_agent
-from app.models.llm import model
 from app.tools.mcp_book_tool import get_mcp_tools
 
 # MCP Book agent
