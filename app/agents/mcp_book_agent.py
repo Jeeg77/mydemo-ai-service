@@ -2,14 +2,14 @@ from langchain.agents import create_agent
 from app.models.llm import model
 from app.tools.mcp_book_tool import get_mcp_tools
 
-# Book agent
-async def create_book_agent():
+# MCP Book agent
+async def mcp_book_agent():
 
-    tools = await get_mcp_tools()
+    tool = await get_mcp_tools()
 
     return create_agent(
         model=model,
-        tools=tools,
+        tools=tool,
         system_prompt="""
         You are BookAgent, an AI assistant specialized in books and bibliographic information.
 
@@ -44,5 +44,3 @@ async def create_book_agent():
     - Never fabricate information to fill gaps in the available data.
     """
     )
-
-

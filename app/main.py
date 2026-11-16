@@ -1,11 +1,11 @@
 from fastapi import FastAPI
 from app.models.chat import ChatRequest
-from app.agents.mcp_book_agent import create_book_agent
+from app.agents.super_agent import super_agent  
 from contextlib import asynccontextmanager
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    app.state.book_agent = await create_book_agent()
+    app.state.super_agent = await super_agent()
     yield
 
 
@@ -19,7 +19,7 @@ def health():
 @app.post("/chat")
 async def chat(request: ChatRequest):
 
-    result = await app.state.book_agent.ainvoke({
+    result = await app.state.super_agent.ainvoke({
         "messages": [
             {"role": "user", "content": request.message}
         ]
