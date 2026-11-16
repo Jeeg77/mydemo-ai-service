@@ -54,7 +54,6 @@ wandb/
 mlruns/
 lightning_logs/
 checkpoints/
-models/
 *.pt
 *.pth
 *.ckpt
