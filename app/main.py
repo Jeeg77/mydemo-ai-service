@@ -25,4 +25,15 @@ async def chat(request: ChatRequest):
         ]
     })
 
-    return result
+    content = result["messages"][-1].content
+
+    if isinstance(content, list):
+        content = "\n".join(
+            item["text"]
+            for item in content
+            if isinstance(item, dict) and item.get("type") == "text"
+        )
+
+    return {
+        "response": content
+    }
