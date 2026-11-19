@@ -1,6 +1,7 @@
+
 from fastapi import FastAPI
 from app.models.chat import ChatRequest
-from app.agents.super_agent import super_agent  
+from app.agents.super_agent import super_agent
 from contextlib import asynccontextmanager
 
 @asynccontextmanager
@@ -35,5 +36,7 @@ async def chat(request: ChatRequest):
         )
 
     return {
-        "response": content
+        "response": content,
+        "internalBooks": result.get("internal_books", []),
+        "externalBooks": result.get("external_books", [])
     }

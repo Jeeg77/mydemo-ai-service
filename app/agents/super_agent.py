@@ -1,3 +1,4 @@
+from urllib import response
 from app.config.llm import model
 from langchain.tools import ToolRuntime, tool
 from langchain.messages import HumanMessage, ToolMessage
@@ -7,8 +8,10 @@ from app.agents.elastic_book_agent import elastic_book_agent
 from app.models.book_search_state import BookSearchState
 from langchain.agents import create_agent
 
+import json
+
 @tool
-async def search_external_books(runtime: ToolRuntime) -> str:
+async def search_external_books(runtime: ToolRuntime) -> Command:
     """Book agent searches for books based on specified criteria."""
     title = runtime.state["title"]
     author = runtime.state["author"]
@@ -21,33 +24,48 @@ async def search_external_books(runtime: ToolRuntime) -> str:
             HumanMessage(content=f"Find books with title {title}, author {author}, and year {year}")
         ]
     })
-    return response['messages'][-1].content
+
+    external_books = []
+
+    for message in response["messages"]:
+        if isinstance(message, ToolMessage):
+            artifact = message.artifact or {}
+            structured = artifact.get("structured_content", {})
+            works = structured.get("works", [])
+
+            external_books = [
+                {
+                    "id": book.get("work_id"),
+                    "title": book.get("title"),
+                    "author": ", ".join(book.get("author_names", [])),
+                    "year": book.get("first_publish_year")
+                }
+                for book in works
+            ]
+
+    result_text = response["messages"][-1].content
+
+    return Command(
+        update={
+            "external_books": external_books,
+            "messages": [
+                ToolMessage(
+                    content=result_text,
+                    tool_call_id=runtime.tool_call_id
+                )
+            ]
+        }
+    )
 
 
 @tool
-async def search_internal_books(runtime: ToolRuntime) -> str:
+async def search_internal_books(runtime: ToolRuntime) -> Command:
     """Book agent searches for books based on specified criteria."""
     title = runtime.state["title"]
     author = runtime.state["author"]
     year = runtime.state["year"]
 
-    print("\n========== SEARCH INTERNAL BOOKS ==========")
-    print(f"Stato ricevuto: {runtime.state}")
-    print(f"Titolo: {title}")
-    print(f"Autore: {author}")
-    print(f"Anno: {year}")
-
     elastic_agent = await elastic_book_agent()
-  
-    print(
-        "ANNOTAZIONI SCHEMA AGENTE:",
-        elastic_agent.builder.state_schema.__annotations__
-    )
-
-    print(
-        "CAMPI SCHEMA AGENTE:",
-        getattr(elastic_agent.builder.state_schema, "model_fields", None)
-    )
 
     elastic_input = {
         "messages": [
@@ -58,13 +76,37 @@ async def search_internal_books(runtime: ToolRuntime) -> str:
         "year": year
     }
 
-    print("INPUT ELASTIC AGENT:", elastic_input)
-
     response = await elastic_agent.ainvoke(elastic_input)
 
-    print("===========================================\n")
+    internal_books = []
 
-    return response['messages'][-1].content
+    for message in response["messages"]:
+        if isinstance(message, ToolMessage) and message.name == "search_books":
+            books = json.loads(message.content)
+
+            internal_books = [
+                {
+                    "id": book.get("id"),
+                    "title": book.get("title"),
+                    "author": book.get("author"),
+                    "year": book.get("publication_year")
+                }
+                for book in books
+            ]
+
+    result_text = response["messages"][-1].content
+
+    return Command(
+        update={
+            "internal_books": internal_books,
+            "messages": [
+                ToolMessage(
+                    content=result_text,
+                    tool_call_id=runtime.tool_call_id
+                )
+            ]
+        }
+    )
 
 
 @tool

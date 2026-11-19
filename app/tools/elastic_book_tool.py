@@ -39,7 +39,7 @@ def search_books(
 
     if title and title.lower() != "tutti i titoli":
         filters.append({
-            "match": {
+            "match_phrase": {
                 "title": title
             }
         })

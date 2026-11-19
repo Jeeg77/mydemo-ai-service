@@ -8,3 +8,5 @@ class BookSearchState(TypedDict):
     title: str | None
     author: str | None
     year: int | None
+    internal_books: list[dict]
+    external_books: list[dict]
